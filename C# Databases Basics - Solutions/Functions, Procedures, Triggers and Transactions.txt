@@ -1,0 +1,441 @@
+--01. Employees with Salary Above 35000
+
+CREATE PROC usp_GetEmployeesSalaryAbove35000
+AS
+SELECT FirstName,LastName 
+FROM Employees
+WHERE Salary > 35000
+
+EXEC usp_GetEmployeesSalaryAbove35000
+
+--02. Employees with Salary Above Number
+
+CREATE PROC usp_GetEmployeesSalaryAboveNumber (@Number DECIMAL(18,4))
+AS
+SELECT FirstName,LastName 
+FROM Employees
+WHERE Salary >= @Number
+
+EXEC usp_GetEmployeesSalaryAboveNumber 48100
+
+--03. Town Names Starting With
+
+CREATE PROC usp_GetTownsStartingWith  (@Input NVARCHAR(50))
+AS
+SELECT [Name]
+FROM Towns
+WHERE [Name] LIKE @Input + '%'
+
+EXEC usp_GetTownsStartingWith 'b'
+
+--04. Employees from Town
+
+CREATE PROC usp_GetEmployeesFromTown (@TownName NVARCHAR(50))
+AS
+SELECT e.FirstName,e.LastName 
+FROM Towns AS t
+JOIN Addresses AS a ON a.TownID = t.TownID
+JOIN Employees AS e ON e.AddressID = a.AddressID
+WHERE t.[Name] = @TownName
+
+EXEC usp_GetEmployeesFromTown 'Sofia'
+
+--05. Salary Level Function
+
+CREATE FUNCTION ufn_GetSalaryLevel(@salary DECIMAL(18,4))
+RETURNS NVARCHAR(30)
+AS
+BEGIN
+DECLARE @Result NVARCHAR(30)
+	SET @Result =
+	(
+		CASE
+			WHEN @salary < 30000 THEN 'Low'
+			WHEN @salary BETWEEN 30000 AND 50000 THEN 'Average'
+			ELSE 'High'
+		END
+	)
+	RETURN @Result
+END
+
+SELECT Salary, dbo.ufn_GetSalaryLevel(Salary)AS [Salary Level] 
+FROM Employees
+
+--06. Employees by Salary Level
+
+CREATE PROC usp_EmployeesBySalaryLevel (@LevelOfSalary NVARCHAR(30))
+AS
+SELECT FirstName,LastName 
+FROM Employees
+WHERE dbo.ufn_GetSalaryLevel(Salary) = @LevelOfSalary
+
+EXEC usp_EmployeesBySalaryLevel 'High'
+
+--07. Define Function
+
+CREATE FUNCTION ufn_IsWordComprised(@setOfLetters NVARCHAR(30), @word NVARCHAR(30))
+RETURNS BIT
+BEGIN
+
+DECLARE @count INT = 1
+
+	WHILE (@count <= LEN(@word))
+		BEGIN
+
+			DECLARE @currLetter CHAR(1) = SUBSTRING(@word,@count,1)
+
+			IF (CHARINDEX(@currLetter,@setOfLetters) = 0)
+				RETURN 0
+
+			SET @count += 1;
+		END
+RETURN 1
+END
+
+SELECT  'oistmiahf' AS SetOfLetters,
+		'Sofia' AS Word, 
+		dbo.ufn_IsWordComprised('oistmiahf','Sofia') AS Result
+
+--08. Delete Employees and Departments
+
+CREATE PROC usp_DeleteEmployeesFromDepartment (@departmentId INT)
+AS
+
+DECLARE @empIDsToBeDeleted TABLE
+(
+Id int
+)
+
+INSERT INTO @empIDsToBeDeleted
+SELECT e.EmployeeID
+FROM Employees AS e
+WHERE e.DepartmentID = @departmentId
+
+ALTER TABLE Departments
+ALTER COLUMN ManagerID int NULL
+
+DELETE FROM EmployeesProjects
+WHERE EmployeeID IN (SELECT Id FROM @empIDsToBeDeleted)
+
+UPDATE Employees
+SET ManagerID = NULL
+WHERE ManagerID IN (SELECT Id FROM @empIDsToBeDeleted)
+
+UPDATE Departments
+SET ManagerID = NULL
+WHERE ManagerID IN (SELECT Id FROM @empIDsToBeDeleted)
+
+DELETE FROM Employees
+WHERE EmployeeID IN (SELECT Id FROM @empIDsToBeDeleted)
+
+DELETE FROM Departments
+WHERE DepartmentID = @departmentId 
+
+SELECT COUNT(*) AS [Employees Count] FROM Employees AS e
+JOIN Departments AS d
+ON d.DepartmentID = e.DepartmentID
+WHERE e.DepartmentID = @departmentId
+
+--09. Find Full Name
+
+CREATE PROC usp_GetHoldersFullName AS
+SELECT FirstName + ' ' + LastName AS [Full Name] 
+  FROM AccountHolders
+
+EXEC usp_GetHoldersFullName 
+
+--10. People with Balance Higher Than
+
+CREATE PROC usp_GetHoldersWithBalanceHigherThan 
+		(@Money DECIMAL(18, 4))
+ AS
+	BEGIN
+		SELECT FirstName AS 'First Name', 
+			 LastName AS 'Last Name' 
+			FROM AccountHolders AS ah
+				JOIN Accounts AS a ON a.AccountHolderId = ah.Id
+			GROUP BY FirstName, LastName
+			HAVING SUM(Balance) > @Money
+			ORDER BY FirstName, LastName
+	END
+
+EXEC usp_GetHoldersWithBalanceHigherThan 500000
+
+--11. Future Value Function
+
+CREATE FUNCTION ufn_CalculateFutureValue (@Sum MONEY, @Rate FLOAT , @Years INT)
+RETURNS MONEY AS
+BEGIN
+	RETURN @Sum * POWER(1+@Rate,@Years)
+END
+
+--12. Calculating Interest
+
+CREATE PROC usp_CalculateFutureValueForAccount (@AccountId INT, @InterestRate FLOAT) AS
+SELECT a.Id AS [Account Id],
+	   ah.FirstName AS [First Name],
+	   ah.LastName AS [Last Name],
+	   a.Balance,
+	   dbo.ufn_CalculateFutureValue(Balance, @InterestRate, 5) AS [Balance in 5 years]
+  FROM AccountHolders AS ah
+  JOIN Accounts AS a ON ah.Id = a.Id
+ WHERE a.Id = @AccountId
+
+ --13. *Cash in User Games Odd Rows
+
+CREATE FUNCTION ufn_CashInUsersGames(@gameName varchar(max))
+RETURNS @returnedTable TABLE
+(
+SumCash money
+)
+AS
+BEGIN
+	DECLARE @result money
+
+	SET @result = 
+	(SELECT SUM(ug.Cash) AS Cash
+	FROM
+		(SELECT Cash, GameId, ROW_NUMBER() OVER (ORDER BY Cash DESC) AS RowNumber
+		FROM UsersGames
+		WHERE GameId = (SELECT Id FROM Games WHERE Name = @gameName)
+		) AS ug
+	WHERE ug.RowNumber % 2 != 0
+	)
+
+	INSERT INTO @returnedTable SELECT @result
+	RETURN
+END
+
+--14. Create Table Logs
+
+CREATE TABLE Logs 
+(
+	LogId INT PRIMARY KEY IDENTITY,
+	AccountId INT NOT NULL REFERENCES Accounts(Id),
+	OldSum MONEY NOT NULL,
+	NewSum MONEY NOT NULL
+)
+
+CREATE TRIGGER tr_OnAccountChangeAddToLogsRecords
+ON Accounts FOR UPDATE
+AS 
+	BEGIN
+		INSERT Logs(AccountId, OldSum, NewSum)
+		SELECT i.Id, d.Balance, i.Balance
+		FROM inserted AS i
+			JOIN deleted AS d ON i.Id = d.Id
+		WHERE i.Balance != d.Balance
+	END
+
+--15. Create Table Emails
+
+CREATE TABLE NotificationEmails
+(
+	Id INT PRIMARY KEY IDENTITY,
+	Recipient INT REFERENCES Accounts(Id),
+	[Subject] NVARCHAR(MAX) NOT NULL,
+	Body NVARCHAR(MAX) NOT NULL
+)
+
+CREATE TRIGGER tr_OnNewRecordAddCreateNewNotificationEmail
+ON Logs FOR INSERT
+AS
+	BEGIN
+		INSERT NotificationEmails(Recipient, [Subject], Body)
+		SELECT i.AccountID AS 'Recipient',
+		'Balance change for account: ' + CAST(i.AccountID AS NVARCHAR(20)) AS 'Subject',
+		'On ' 
+		+ CONVERT(NVARCHAR(25), GETDATE(), 100) 
+		+ ' your balance was changed from ' + CAST (i.OldSum AS NVARCHAR(25))
+		+ ' to ' + CAST(i.NewSum AS NVARCHAR(25)) + '.' AS 'Body'
+		FROM inserted AS i
+	END
+
+--16. Deposit Money
+
+CREATE PROC usp_DepositMoney (@AccountId INT, @MoneyAmount DECIMAL(12, 4))
+AS
+	BEGIN TRANSACTION
+		IF(@MoneyAmount < 0)
+			THROW 50001, 'Cannot add negative money!', 1
+		IF(SELECT COUNT(*) FROM Accounts WHERE Id = @AccountId) < 1
+			THROW 50002, 'Clound not find account!', 1
+		UPDATE Accounts
+		SET Balance += @MoneyAmount
+		WHERE Id = @AccountId
+			COMMIT
+
+EXEC usp_DepositMoney 1, 100
+
+--17. Withdraw Money Procedure
+
+CREATE PROC usp_WithdrawMoney (@AccountId INT, @MoneyAmount DECIMAL(12,4))
+AS
+	BEGIN TRANSACTION
+		IF(@MoneyAmount < 0)
+			THROW 50003, 'Money cannot be negative!', 1
+		IF (SELECT COUNT(*) FROM Accounts WHERE Id = @AccountId) < 1
+			THROW 50004, 'Clound not find account!', 1
+		UPDATE Accounts
+		SET Balance -= @MoneyAmount
+		WHERE Id = @AccountId
+			COMMIT
+
+EXEC usp_WithdrawMoney 1, 100
+
+--18. Money Transfer
+
+CREATE PROC usp_TransferMoney (@SenderId INT, @ReceiverId INT, @Amount MONEY)
+AS
+	BEGIN TRANSACTION
+		IF(SELECT Balance FROM Accounts WHERE Id = @SenderId) - @Amount < 0
+			THROW 50005, 'Insufficient balance', 1
+		EXEC usp_WithdrawMoney @SenderId, @Amount
+		EXEC usp_DepositMoney @ReceiverId, @Amount
+	COMMIT
+
+EXEC usp_TransferMoney 1, 2, 10
+
+--20. *Massive Shopping
+
+--@UserId scalar varible stores Id for Specified user in specified game	
+	DECLARE @UserId INT = (    SELECT ug.Id
+                                 FROM UsersGames AS ug     
+                           INNER JOIN Games AS g
+                                   ON g.Id = ug.GameId
+                           INNER JOIN Users AS u
+                                   ON u.Id = ug.UserId
+                                WHERE u.Username = 'Stamat'
+                                  AND g.[Name] = 'Safflower')
+
+--@UserGameId table varible stores same as @UserId but in table will be used in cross join
+	DECLARE @UserGameId TABLE(Id INT)
+INSERT INTO @UserGameId
+     SELECT ug.Id
+       FROM UsersGames AS ug     
+ INNER JOIN Games AS g
+         ON g.Id = ug.GameId
+ INNER JOIN Users AS u
+         ON u.Id = ug.UserId
+      WHERE u.Username = 'Stamat'
+        AND g.[Name] = 'Safflower'
+
+--@UserGameCash here we will store current cash for the given user
+DECLARE @UserGameCash DECIMAL(15, 2)	
+
+--@FirstItems table varible stores ids of items we need to insert
+    DECLARE @FirstItems TABLE(Id INT)
+INSERT INTO @FirstItems
+     SELECT Id 
+       FROM Items
+      WHERE MinLevel IN (11, 12)
+
+--@FirstItemsTotalPrice total price of items
+DECLARE @FirstItemsTotalPrice DECIMAL(15,2) = (SELECT SUM(Price)
+                                                 FROM Items
+												WHERE ID IN (SELECT Id 
+                                                               FROM Items
+                                                              WHERE MinLevel IN (11, 12)))
+
+--@SecondItems table varible stores ids of items we need to insert
+    DECLARE @SecondItems TABLE(Id INT)
+INSERT INTO @SecondItems
+     SELECT Id 
+       FROM Items
+      WHERE MinLevel IN (19, 20, 21)
+
+--@FirstItemsTotalPrice total price of items
+DECLARE @SecondItemsTotalPrice DECIMAL(15,2) = (SELECT SUM(Price)
+                                                 FROM Items
+												WHERE ID IN (SELECT Id 
+                                                               FROM Items
+                                                              WHERE MinLevel IN (19, 20, 21)))
+
+--Setting current cash value
+SET @UserGameCash = (SELECT Cash FROM UsersGames WHERE Id = @UserId)
+
+--First transaction i still prefer to check if condition is met then we make changes
+BEGIN TRANSACTION
+               IF (@FirstItemsTotalPrice <= @UserGameCash)
+            BEGIN
+			          INSERT INTO UserGameItems
+				      SELECT *
+                        FROM @FirstItems
+                  CROSS JOIN @UserGameId
+
+				  UPDATE UsersGames 
+				     SET Cash -= @FirstItemsTotalPrice
+				   WHERE Id = @UserId
+              END
+COMMIT
+
+--Setting current cash value
+SET @UserGameCash = (SELECT Cash FROM UsersGames WHERE Id = @UserId)
+
+--Second transaction is same as first
+BEGIN TRANSACTION
+               IF (@SecondItemsTotalPrice <= @UserGameCash)
+            BEGIN
+			          INSERT INTO UserGameItems
+				      SELECT *
+                        FROM @SecondItems
+                  CROSS JOIN @UserGameId
+
+				  UPDATE UsersGames 
+				     SET Cash -= @SecondItemsTotalPrice
+				   WHERE Id = @UserId
+              END
+COMMIT
+
+--Displaing result
+    SELECT i.[Name] AS [Item Name]
+      FROM UserGameItems AS ugi
+INNER JOIN Items AS i
+        ON i.Id = ugi.ItemId
+INNER JOIN UsersGames AS ug
+        ON ug.Id = ugi.UserGameId
+INNER JOIN Games AS g
+        ON g.Id = ug.GameId
+     WHERE UserGameId = 110
+	   AND g.[Name] = 'Safflower'
+  ORDER BY i.[Name]
+
+--21. Employees with Three Projects
+
+CREATE PROC usp_AssignProject(@emloyeeId INT, @projectID INT)
+AS
+	BEGIN TRANSACTION
+		INSERT INTO  EmployeesProjects VALUES
+			(@emloyeeId, @projectID)
+		IF (SELECT COUNT(*) FROM EmployeesProjects WHERE EmployeeID = @emloyeeId) > 3
+			BEGIN
+				ROLLBACK;
+				THROW 50004, 'The employee has too many projects!', 1
+			END
+		COMMIT
+
+EXEC usp_AssignProject 250, 1
+
+--22. Delete Employees
+
+CREATE TABLE Deleted_Employees
+(
+	EmployeeId  INT PRIMARY KEY IDENTITY,
+	FirstName VARCHAR(50) NOT NULL,
+	LastName VARCHAR(50) NOT NULL,
+	MiddleName VARCHAR(50) NOT NULL,
+	JobTitle VARCHAR(50) NOT NULL,
+	DepartmentId INT NOT NULL,
+	Salary MONEY NOT NULL
+)
+
+CREATE TRIGGER Add_Employee_Records_When_It_Is_Deleted
+ON Employees AFTER DELETE
+AS
+	BEGIN
+		INSERT INTO Deleted_Employees
+			(FirstName, LastName, MiddleName, JobTitle, DepartmentId, Salary)
+		SELECT d.FirstName, d.LastName, 
+			   d.MiddleName, d.JobTitle, d.DepartmentID, d.Salary
+		FROM deleted AS d
+	END

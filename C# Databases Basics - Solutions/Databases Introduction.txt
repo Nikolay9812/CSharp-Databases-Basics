@@ -1,0 +1,437 @@
+--04. Insert Records in Both Tables
+
+INSERT INTO Towns (Id,Name) VALUES
+(1,'Sofia'),
+(2,'Plovdiv'),
+(3,'Varna')
+
+INSERT INTO Minions (Id,Name,Age,TownId) VALUES
+(1,'Kevin',22,1),
+(2,'Bob',15,3),
+(3,'Steward',NULL,2)
+
+
+--07. Create Table People
+
+CREATE TABLE People
+(
+	Id INT PRIMARY KEY IDENTITY,
+	[Name] NVARCHAR(200) NOT NULL,
+	Picture NVARCHAR(MAX)NOT NULL,
+	Height DECIMAL (10,2) NULL,
+	[Weight]  DECIMAL (10,2) NULL,
+	Gender NVARCHAR(1) NOT NULL
+)
+
+INSERT INTO People([Name],Picture,Height,[Weight],Gender) VALUES
+('Ivan','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png',1.87,78.8,'m'),
+('Dragan','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png',1.87,78.8,'m'),
+('Petkan','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png',1.87,78.8,'f'),
+('Tamqn','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png',1.87,78.8,'f'),
+('Avram','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png',1.87,78.8,'m')
+
+--08. Create Table Users
+
+CREATE TABLE Users
+(
+	Id INT PRIMARY KEY IDENTITY,
+	Username NVARCHAR(30),
+	[Password] NVARCHAR(26),
+	ProfilePicture  NVARCHAR(MAX),
+	LastLoginTime DATETIME,
+	IsDeleted BIT
+)
+
+INSERT INTO Users(Username,[Password],ProfilePicture,LastLoginTime,IsDeleted) VALUES
+('Ivan','password','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png','5/5/2012',0),
+('Dragan','password','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png','5/5/2012',0),
+('Petkan','password','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png','5/5/2012',1),
+('Tamqn','password','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png','5/5/2012',0),
+('Avram','password','https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png','5/5/2012',1)
+
+--13. Movies Database
+
+CREATE TABLE Directors
+(
+    Id int IDENTITY ,
+    DirectorName nvarchar(50) NOT NULL,
+    Notes nvarchar(MAX)
+)
+
+CREATE TABLE Genres
+(
+    Id int IDENTITY,
+    GenereName nvarchar(50) NOT NULL,
+    Notes nvarchar(MAX)
+)
+
+CREATE TABLE Categories 
+(
+    Id int IDENTITY,
+    CategoryName nvarchar(50) NOT NULL,
+    Notes nvarchar(MAX)
+)
+
+CREATE TABLE Movies
+(
+    Id int IDENTITY,
+    Title nvarchar(50),
+    DirectorId int,
+    CopyrightYear  int,
+    Length int,
+    GenreId int,
+    CatgoryId int,
+    Rating int, 
+    Notes nvarchar(MAX)
+)
+
+ALTER TABLE Directors
+ADD CONSTRAINT PK_Id
+PRIMARY KEY (Id)
+
+ALTER TABLE Genres
+ADD CONSTRAINT PK_Genres
+PRIMARY KEY (Id)
+
+ALTER TABLE Categories
+ADD CONSTRAINT PK_Categories
+PRIMARY KEY (Id)
+
+ALTER TABLE Movies
+ADD CONSTRAINT PK_Movies
+PRIMARY KEY (Id)
+
+INSERT INTO Directors(DirectorName,Notes)
+VALUES ('Pesho', 'Пешо е добър служител'), 
+('Mitko','Митко е най-добрия'),
+('Калин', 'Отличникът'),
+('Калина', 'Тя просто е перфектна'),
+('Явор', 'Връзкар')
+
+INSERT INTO Genres (GenereName, Notes)
+VALUES ('Asen', 'klklkl'),
+('Kaloqn', ' lrlllll'),
+('Simeon', 'Aheloi'),
+('Boris', 'Покръстителят'),
+('Крум', 'Крумовите закони')
+
+INSERT INTO Categories (CategoryName,Notes)
+VALUES ('HISTORY', 'Отличен филм'),
+('Action', 'Oscar'),
+('History','lklllllk'),
+('drama', 'lkooooopo' ),
+('Triller', 'llkllkklk')
+
+INSERT INTO Movies (Title,DirectorId,CopyrightYear,Length,GenreId,CatgoryId,Rating,Notes)
+VALUES(' King' ,5,1999,78,1,5,10,'otlichen'),
+('RRIRIR',4,2000,90,2,4,9,'otlichen'),
+('plpppo',3,1980,100,3,3,5,'otlichen'),
+('kkiklo',2,1890,20,4,2,10,'iopkll'),
+('ukukkk',1,1990,120,5,1,10,'plpppp')
+
+--14. Car Rental Database
+
+CREATE TABLE Categories  (
+	Id INT PRIMARY KEY IDENTITY NOT NULL,
+	CategoryName NVARCHAR(30) NOT NULL,
+	DailyRate DECIMAL(6,2) NOT NULL,
+	WeeklyRate DECIMAL (8,2) NOT NULL,
+	MonthlyRate DECIMAL (9,2) NOT NULL,
+	WeekendRate DECIMAL (6,2) NOT NULL
+)
+
+CREATE TABLE Cars (
+	ID INT PRIMARY KEY IDENTITY NOT NULL,
+	PlateNumber NVARCHAR(20) NOT NULL,
+	Manufacturer NVARCHAR (100) NOT NULL,
+	Model VARCHAR(30) NOT NULL,
+	CarYear SMALLINT NOT NULL,
+	CHECK (CarYear >= 1900 AND CarYear <= 2020),
+	CategoryId INT NOT NULL,
+	Doors SMALLINT NOT NULL,
+	Picture VARBINARY(MAX),
+	Condition BIT NOT NULL,
+	Available BIT NOT NULL
+)
+
+CREATE TABLE Employees (
+	Id INT PRIMARY KEY IDENTITY NOT NULL,
+	FirstName NVARCHAR(30) NOT NULL,
+	LastName NVARCHAR(30) NOT NULL,
+	Title NVARCHAR(20) NOT NULL,
+	Notes NVARCHAR(MAX)
+)
+
+CREATE TABLE Customers (
+	Id INT PRIMARY KEY IDENTITY NOT NULL,
+	DriverLicenceNumber BIGINT NOT NULL,
+	FullName NVARCHAR(100) NOT NULL,
+	[Address] NVARCHAR(100) NOT NULL,
+	City NVARCHAR(100) NOT NULL,
+	ZIPCode NVARCHAR(20),
+	Notes NVARCHAR(MAX)
+)
+
+CREATE TABLE RentalOrders (
+	Id INT PRIMARY KEY IDENTITY NOT NULL,
+	EmployeeId INT NOT NULL,
+	CustomerId INT NOT NULL,
+	CarId INT NOT NULL,
+	TankLevel SMALLINT NOT NULL,
+	CHECK (TankLevel >= 0 AND TankLevel <= 10),
+	KilometrageStart INT NOT NULL,
+	CHECK (KilometrageStart >= 0),
+	KilometrageEnd INT NOT NULL,
+	CHECK( KilometrageEnd >= KilometrageStart),
+	TotalKilometrage INT NOT NULL,
+	StartDate DATE NOT NULL,
+	EndDate DATE NOT NULL,
+	TotalDays INT NOT NULL,
+	CHECK (TotalDays >= 0),
+	RateApplied DECIMAL(8,2) NOT NULL,
+	TaxRate DECIMAL (8,2) NOT NULL,
+	OrderStatus BIT NOT NULL,
+	Notes NVARCHAR(MAX)
+)
+
+ALTER TABLE RentalOrders
+ADD CONSTRAINT FK_EmployeeId
+FOREIGN KEY (EmployeeId) REFERENCES Employees(Id)
+
+ALTER TABLE RentalOrders
+ADD CONSTRAINT FK_CustomerId
+FOREIGN KEY (CustomerId) REFERENCES Customers(Id)
+
+ALTER TABLE RentalOrders
+ADD CONSTRAINT FK_CarId
+FOREIGN KEY (CarId) REFERENCES Cars(Id)
+
+ALTER TABLE Cars
+ADD CONSTRAINT FK_CategoryId
+FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+
+INSERT INTO Categories (CategoryName, DailyRate, WeeklyRate, MonthlyRate, WeekendRate) VALUES
+('Economy', 30, 150, 500, 80),
+('MidClass', 50, 250, 1000, 130),
+('HighClass', 100, 500, 2000, 250)
+
+INSERT INTO Cars (PlateNumber, Manufacturer, Model, CarYear, CategoryId, Doors, Picture, Condition, Available) VALUES
+('CA9999AC', 'BMW', '740i', 2019, 3, 4, NULL, 0, 1),
+('CB1111BC', 'Mercedes', 'S500', 2017, 1, 4, NULL, 1, 1),
+('CB555555', 'Honda', 'Accord', 2018, 2, 5, NULL, 1, 1)
+
+INSERT INTO Employees (FirstName, LastName, Title, Notes ) VALUES
+('Vasil', 'Boyanov', 'Mr.', 'Bay mangal'),
+('Boyko', 'Borisov', 'Mr.', 'BB'),
+('Slavi', 'Trifonov', 'Mr.', NULL)
+
+INSERT INTO Customers (DriverLicenceNumber, FullName, [Address], City, ZIPCode, Notes) VALUES
+(999000123, 'Stamat I Stamatov', '1 Vasil Levski Str.', 'Tranchovitsa', '3333', 'Smart guy'),
+(999000124, 'Georgi Zhorov Goshov', '1 Hristo Botev Str.', 'Dupnitsa', '2400', 'Dummy'),
+(999000125, 'Ivan Vankov Bayivanov', '2 Izgrev Str.', 'Kosinbrod', '1400', 'Compleate Redneck')
+
+INSERT INTO RentalOrders (EmployeeId, CustomerId, CarId, TankLevel, KilometrageStart, KilometrageEnd, TotalKilometrage, 
+						  StartDate, EndDate, TotalDays, RateApplied, TaxRate, OrderStatus, Notes) VALUES
+(1, 2, 3, 10, 26000, 29000, 3000, '2019-01-01', '2019-01-31', 31, 100, 12.60, 1, NULL),
+(2, 1, 1, 9, 33000, 35000, 2000, '2019-02-01', '2019-02-21', 21, 30, 5.40, 1, NULL),
+(3, 3, 2, 4, 84000, 85000, 1000, '2019-03-10', '2019-03-15', 6, 80, 8.30, 0, NULL)
+
+--15. Hotel Database
+
+CREATE TABLE Employees (
+	Id INT PRIMARY KEY IDENTITY NOT NULL,
+	FirstName NVARCHAR(30) NOT NULL,
+	LastName NVARCHAR(30) NOT NULL,
+	Title NVARCHAR(20),
+	Notes NVARCHAR(MAX)
+)
+
+CREATE TABLE Customers  (
+	AccountNumber INT PRIMARY KEY IDENTITY NOT NULL,
+	FirstName NVARCHAR(30) NOT NULL,
+	LastName NVARCHAR(30) NOT NULL,
+	PhoneNumber BIGINT,
+	EmergencyName NVARCHAR(100),
+	EmergencyNumber BIGINT,
+	Notes NVARCHAR(MAX)
+)
+
+CREATE TABLE RoomStatus (
+	RoomStatus NVARCHAR(30) PRIMARY KEY NOT NULL,
+	Notes NVARCHAR(MAX)
+)
+
+CREATE TABLE RoomTypes (
+	RoomType NVARCHAR(30) PRIMARY KEY NOT NULL,
+	Notes NVARCHAR(MAX)
+)
+
+CREATE TABLE BedTypes  (
+	BedType NVARCHAR(30) PRIMARY KEY NOT NULL,
+	Notes NVARCHAR(MAX)
+)
+
+CREATE TABLE Rooms (
+	RoomNumber INT PRIMARY KEY NOT NULL,
+	RoomType NVARCHAR(30) NOT NULL,
+	BedType NVARCHAR(30) NOT NULL,
+	Rate DECIMAL (7,2) NOT NULL,
+	RoomStatus NVARCHAR(30) NOT NULL,
+	Notes NVARCHAR(MAX)
+)
+
+CREATE TABLE Payments (
+	Id INT PRIMARY KEY IDENTITY NOT NULL,
+	EmployeeId INT NOT NULL,
+	PaymentDate DATE NOT NULL,
+	AccountNumber INT NOT NULL,
+	FirstDateOccupied DATE NOT NULL,
+	LastDateOccupied DATE NOT NULL,
+	CHECK (LastDateOccupied >= FirstDateOccupied),
+	TotalDays INT NOT NULL,
+	CHECK (TotalDays >= 0),
+	AmountCharged DECIMAL(10,2),
+	TaxRate DECIMAL(5,2),
+	TaxAmount DECIMAL(10,2),
+	PaymentTotal DECIMAL(10,2),
+	Notes NVARCHAR(MAX)
+)
+
+CREATE TABLE Occupancies (
+	Id INT PRIMARY KEY IDENTITY NOT NULL,
+	EmployeeId INT NOT NULL,
+	DateOccupied DATE NOT NULL,
+	AccountNumber INT NOT NULL,
+	RoomNumber INT NOT NULL,
+	RateApplied DECIMAL(7,2) NOT NULL,
+	PhoneCharge DECIMAL(10,2),
+	Notes NVARCHAR(MAX)
+)
+
+ALTER TABLE Rooms
+ADD CONSTRAINT FK_RoomType
+FOREIGN KEY (RoomType) REFERENCES RoomTypes(RoomType)
+
+ALTER TABLE Rooms
+ADD CONSTRAINT FK_BedType
+FOREIGN KEY (BedType) REFERENCES BedTypes(BedType)
+
+ALTER TABLE Rooms
+ADD CONSTRAINT FK_RoomStatus
+FOREIGN KEY (RoomStatus) REFERENCES RoomStatus(RoomStatus)
+
+ALTER TABLE Payments
+ADD CONSTRAINT FK_EmployeeId
+FOREIGN KEY (EmployeeId) REFERENCES Employees(Id)
+
+ALTER TABLE Occupancies
+ADD CONSTRAINT FK_EmployeeId_Occ
+FOREIGN KEY (EmployeeId) REFERENCES Employees(Id)
+
+ALTER TABLE Occupancies
+ADD CONSTRAINT FK_AccountNumber
+FOREIGN KEY (AccountNumber) REFERENCES Customers(AccountNumber)
+
+ALTER TABLE Occupancies
+ADD CONSTRAINT FK_RoomNumber
+FOREIGN KEY (RoomNumber) REFERENCES Rooms(RoomNumber)
+
+INSERT INTO Employees (FirstName, LastName, Title, Notes) VALUES
+('Ivan', 'Todorov', 'Mr.', 'Looking creepy guy'),
+('Vasil', 'Boyanov', 'n/a', 'Compleate gipsy'),
+('Boyko', 'Borisov', 'Mr.', NULL)
+
+INSERT INTO Customers (FirstName, LastName, PhoneNumber, EmergencyName, EmergencyNumber, Notes) VALUES
+('Client1', 'Client1 Family', 00359887887887, 'his mother', 00359888111222, 'Looking strange'),
+('Client2', 'Client3 Family', NULL, NULL, NULL, NULL),
+('Client2', 'Client3 Family', NULL, 'his father', 00359888444222, NULL)
+
+INSERT INTO RoomStatus (RoomStatus, Notes) VALUES
+('empty', 'big room'),
+('occuped', 'big room'),
+('closed' , 'need repainting')
+
+INSERT INTO RoomTypes(RoomType, Notes) VALUES
+('Double', 'standart'),
+('Tween', NULL),
+('Family', NULL)
+
+INSERT INTO BedTypes(BedType, Notes) VALUES
+('Single', 'realy small'),
+('King', 'big'),
+('Queen', 'biggest one')
+
+INSERT INTO Rooms (RoomNumber, RoomType, BedType, Rate, RoomStatus, Notes) VALUES
+(101, 'Double', 'King', 100.99, 'occuped', 'some nonte'),
+(201, 'Tween', 'Single', 50.99, 'occuped', 'some nonte'),
+(301, 'Family', 'Queen', 120.99, 'occuped', 'some nonte')
+
+INSERT INTO Payments(EmployeeId, PaymentDate, AccountNumber, FirstDateOccupied, LastDateOccupied, TotalDays, 
+					AmountCharged, TaxRate, TaxAmount, PaymentTotal, Notes) VALUES
+(1, '2019-09-01', 1000000001, '2019-01-01', '2019-08-31', 306, 1004.20, 10, 400.20, 20502.55, NULL),
+(2, '2019-09-01', 1000000002, '2019-02-01', '2019-08-31', 276, 804.20, 10, 200.20, 17502.55, NULL),
+(3, '2019-09-01', 1000000003, '2019-03-01', '2019-08-31', 246, 704.20, 10, 100.20, 15502.55, NULL)
+
+INSERT INTO Occupancies (EmployeeId, DateOccupied, AccountNumber, RoomNumber, RateApplied, PhoneCharge, Notes) VALUES
+(1, '2019-01-01', 1, 101, 100.99, NULL, NULL),
+(3, '2019-02-01', 3, 301, 90.99, NULL, NULL),
+(2, '2019-03-01', 2, 201, 70.99, NULL, NULL)
+
+--19. Basic Select All Fields
+
+SELECT * 
+  FROM Towns
+
+SELECT * 
+  FROM Departments
+
+SELECT * 
+  FROM Employees
+
+--20. Basic Select All Fields and Order Them
+
+SELECT * 
+  FROM Towns
+ORDER BY [Name]
+
+SELECT * 
+  FROM Departments
+ORDER BY [Name]
+
+SELECT * 
+  FROM Employees
+ORDER BY Salary DESC
+
+--21. Basic Select Some Fields
+
+SELECT [Name]
+  FROM Towns
+ORDER BY [Name]
+
+SELECT [Name]
+  FROM Departments
+ORDER BY [Name]
+
+SELECT FirstName, LastName, JobTitle, Salary
+  FROM Employees
+ORDER BY Salary DESC
+
+--22. Increase Employees Salary
+
+UPDATE Employees
+SET Salary *= 1.1
+
+SELECT Salary
+  FROM Employees
+
+--23. Decrease Tax Rate
+
+UPDATE Payments
+SET TaxRate *= 0.97
+
+SELECT TaxRate
+  FROM Payments
+
+--24. Delete All Records
+
+TRUNCATE TABLE Occupancies
